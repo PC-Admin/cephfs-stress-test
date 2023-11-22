@@ -1,0 +1,17 @@
+[global]
+directory=/mnt/cephfs
+ioengine=libaio
+runtime=60
+time_based
+direct=1
+numjobs=1
+nrfiles=1024
+group_reporting
+
+[read-test]
+stonewall
+rw=randread
+iodepth=32
+openfiles=50
+filesize=2MB-10MB
+rate_iops=300
