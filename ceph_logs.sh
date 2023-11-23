@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Define the mode variable ('all' or 'today')
-mode=$1
-
-# Today's date in the format that matches your log files
-today=$(date +"%Y-%m-%d")
-
 # Create a datetime stamped folder
 folder_name="export_$(date +"%Y-%m-%d_%H:%M:%S")"
 mkdir "$folder_name"
@@ -27,7 +21,7 @@ for host in "${hosts[@]}"; do
     scp "$host:/var/log/ceph/*/*.log" "./$folder_name/$host"
 
     # Get the list of ceph container names from the host
-    IFS=$'\n' read -r -d '' -a container_names < <( ssh "$host" "docker ps -a | grep 'ceph' | grep -E 'mgr|mds|crash|mon' | awk '{print \$NF}'" && printf '\0' )
+    IFS=$'\n' read -r -d '' -a container_names < <( ssh "$host" "docker ps -a | grep 'ceph' | grep -E 'mgr|mds|crash|mon|osd' | awk '{print \$NF}'" && printf '\0' )
 
     # Iterate over each container name and extract the logs to the export folder
     for container_name in "${container_names[@]}"; do

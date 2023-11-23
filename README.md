@@ -19,15 +19,15 @@ root@ceph01:/# cat /etc/ceph/ceph.keyring
 ```
 
 Then mount the CephFS:
-`pcadmin@workstation:~/cephfs-stress-test$ sudo mount -t ceph 10.1.45.201:6789:/ /mnt/cephfs -o name=admin,secret=REDACTED`
-
-`pcadmin@workstation:~/cephfs-stress-test$ sudo chown pcadmin:pcadmin /mnt/cephfs/`
+```
+pcadmin@workstation:~/cephfs-stress-test$ sudo mount -t ceph 10.1.45.201:6789:/ /mnt/cephfs -o name=admin,secret=REDACTED
+pcadmin@workstation:~/cephfs-stress-test$ sudo chown pcadmin:pcadmin /mnt/cephfs/
+```
 
 2) Check that the directory in fiotest.fio is actually the mount location of your CephFS.
 
 
 3) Run the test:
-
 `pcadmin@workstation:~/cephfs-stress-test$ fio ./fiotest.fio`
 
 
@@ -35,6 +35,13 @@ Then mount the CephFS:
 
 Using the provided script you can extract all the logs from the Ceph cluster and copy them to your local machine.
 
-`pcadmin@workstation:~/cephfs-stress-test$ ./ceph_logs.sh all`
+1) First edit the script and add the host names for every ceph node in your cluster:
+```
+# List of hosts
+hosts=('ceph01.penholder.xyz' 'ceph02.penholder.xyz' 'ceph03.penholder.xyz')
+```
+
+2) Then run the script:
+`pcadmin@workstation:~/cephfs-stress-test$ ./ceph_logs.sh`
 
 
