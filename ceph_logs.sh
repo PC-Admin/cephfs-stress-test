@@ -21,25 +21,20 @@ for host in "${hosts[@]}"; do
     echo "Creating local folder for $host"
     mkdir "$folder_name/$host"
 
-    # Copy the remote script to the host
-    echo "Copying remote script to $host"
-    scp remote_script.sh "$host:/tmp/"
+    # Copy the Ceph log files from the host
+    echo "Copying Ceph log files from $host"
+    scp "$host:/var/log/ceph/*.log" "./$folder_name/$host"
+    scp "$host:/var/log/ceph/*/*.log" "./$folder_name/$host"
 
-    # Execute the remote script on the host
-    echo "Executing remote script on $host"
-    ssh "$host" "bash /tmp/remote_script.sh $mode"
+    # Get the list of ceph container names from the host
+    IFS=$'\n' read -r -d '' -a container_names < <( ssh "$host" "docker ps -a | grep 'ceph' | grep -E 'mgr|mds|crash|mon' | awk '{print \$NF}'" && printf '\0' )
 
-    # Copy the logs from the remote host
-    echo "Copying logs from $host"
-    scp -r "$host:/tmp/logs/*.log" "./$folder_name/$host"
+    # Iterate over each container name and extract the logs to the export folder
+    for container_name in "${container_names[@]}"; do
+        echo "Extracting logs for $container_name from $host"
+        ssh "$host" "docker logs $container_name" > "./$folder_name/${host}/${container_name}.log" 2>&1
+    done
 
-    # Remove the logs from the remote host
-    echo "Removing logs from $host"
-    ssh "$host" "rm -f /tmp/logs/*.log"
-
-    # Remove the remote script from the remote host
-    echo "Removing remote script from $host"
-    ssh "$host" "rm -f /tmp/remote_script.sh"
 done
 
 echo "Logs have been copied to $folder_name"
