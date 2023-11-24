@@ -5,9 +5,11 @@ Defined an inventory... ./inventory/hosts
 
 Turns out we need Ubuntu 20.04! Jammy is not supported by this playbook... :P
 
-`$ ansible-playbook -i ./inventory/hosts cephadm-preflight.yml --flush-cache`
+https://github.com/PC-Admin/cephadm-ansible
 
-Okay this playbook won't actually set the cluster up :( we have to use cephadm for that!
+`~/cephadm-ansible$ ansible-playbook -i ./inventory/hosts cephadm-preflight.yml --flush-cache`
+
+Okay this playbook won't actually set the cluster up, we have to use cephadm for that!
 
 
 # Creating a Cluster with cephadm
