@@ -489,8 +489,3 @@ The only reasonable solution seems to be to explore a proper multi-site setup:
 
 https://docs.ceph.com/en/quincy/radosgw/multisite/#varieties-of-multi-site-configuration
 
-
-
-
-
-
