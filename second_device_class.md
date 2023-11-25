@@ -207,14 +207,14 @@ rule replicated_rule {
 	step emit
 }
 rule custom_replicated_rule {
-    id 1
-    type replicated
-    step take default class hdd
-    step chooseleaf firstn 1 type host
-    step emit
-    step take default class hdd_rs
-    step chooseleaf firstn 1 type host
-    step emit
+	id 1
+	type replicated
+	step take default class hdd
+	step chooseleaf firstn 1 type host
+	step emit
+	step take default class hdd_rs
+	step chooseleaf firstn 1 type host
+	step emit
 }
 
 # end crush map
