@@ -11,6 +11,8 @@ https://github.com/PC-Admin/cephadm-ansible
 
 Okay this playbook won't actually set the cluster up, we have to use cephadm for that!
 
+NOTE: These instructions assume your node hostnames are not FQDNs. If they are you should edit them to be short hostnames.
+
 
 # Creating a Cluster with cephadm
 
@@ -20,7 +22,6 @@ https://docs.ceph.com/en/latest/cephadm/install/
 ## Running the Bootstrap Command
 
 ```
-root@ceph01:~# sudo hostname ceph01
 root@ceph01:~# cephadm bootstrap --mon-ip 10.1.45.201
 ...
 
@@ -172,6 +173,7 @@ root@ceph01:/# ceph osd pool ls
 cephfs_data
 cephfs_metadata
 ```
+
 Create a Filesystem: Create the CephFS filesystem:
 ```
 root@ceph01:/# ceph fs new cephfs cephfs_metadata cephfs_data
@@ -180,6 +182,7 @@ root@ceph01:/# ceph fs new cephfs cephfs_metadata cephfs_data
     # ceph osd pool set cephfs_data bulk true
 new fs with metadata pool 3 and data pool 2
 ```
+
 
 ## Mounting CephFS on Local Machine
 ```
