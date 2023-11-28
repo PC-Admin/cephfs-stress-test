@@ -28,9 +28,8 @@ pcadmin@workstation:~$ sudo chown -R pcadmin:pcadmin /mnt/cephfs/
 ## Initial Test With ioping and fio
 
 Before we do anything else. Test the file creation and write speed of the CephFS by using ioping.
-
 ```
-pcadmin@workstation:~$ 
+pcadmin@workstation:~$ ioping -c 5 -W -D /mnt/cephfs/
 4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 22.6 GiB): request=1 time=12.1 ms (warmup)
 4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 22.6 GiB): request=2 time=8.07 ms
 4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 22.6 GiB): request=3 time=6.49 ms
@@ -50,7 +49,7 @@ Time to add some more files we can examine during failures. I like video files a
 ```
 pcadmin@workstation:~$ df -h
 Filesystem                                                                                                                Size  Used Avail Use% Mounted on
-/dev/mapper/MyVault                                                                                                        16G  3.7G   12G  25% /home/pcadmin/MyVault
+...
 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/   26G  7.0G   19G  27% /mnt/cephfs
 ```
 
@@ -86,6 +85,16 @@ ceph01 = VMID 122 (gastly)
 ceph02 = VMID 128 (eevee)
 ceph03 = VMID 129 (jigglypuff)
 
+Before we begin, run a continuos ioping test to see if we can examine the latency increase.
+```
+pcadmin@workstation:~$ ioping -W -D /mnt/cephfs/
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=1 time=8.83 ms (warmup)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=2 time=8.39 ms
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=3 time=8.96 ms
+...
+```
+
+Now forcibly stop the VMs in site a1:
 ```
 pcadmin@workstation:~$ ssh gastly sudo qm stop 122;
 ssh eevee sudo qm stop 128;
@@ -152,19 +161,20 @@ pcadmin@workstation:~$ mkdir /mnt/cephfs/newfolder
 pcadmin@workstation:~$ touch /mnt/cephfs/newfolder/newfile
 ```
 
-What are the ioping results?
+What are the ioping results? (Did you see a drop in file creation/write speed?) **Yes, it lagged for 33 seconds.**
 ```
-$ ioping -c 5 -W -D /mnt/cephfs/
-4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.9 GiB): request=1 time=15.2 ms (warmup)
-4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.9 GiB): request=2 time=18.0 ms
-4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.9 GiB): request=3 time=58.2 ms
-4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.9 GiB): request=4 time=18.0 ms
-4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.9 GiB): request=5 time=18.4 ms
-
---- /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.9 GiB) ioping statistics ---
-4 requests completed in 112.6 ms, 16 KiB written, 35 iops, 142.1 KiB/s
-generated 5 requests in 4.02 s, 20 KiB, 1 iops, 4.98 KiB/s
-min/avg/max/mdev = 18.0 ms / 28.2 ms / 58.2 ms / 17.3 ms
+pcadmin@workstation:~$ ioping -W -D /mnt/cephfs/
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=1 time=8.83 ms (warmup)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=2 time=8.39 ms
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=3 time=8.96 ms
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=4 time=7.39 ms
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=5 time=9.51 ms
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=6 time=9.45 ms
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=7 time=33.1 s (slow)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=8 time=10.3 ms (fast)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=9 time=10.9 ms (fast)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=10 time=9.49 ms (fast)
+...
 ```
 
 After flipping hosts back on:
@@ -195,52 +205,53 @@ HEALTH_WARN clock skew detected on mon.ceph02
 
 ## Testing Datacenter Isolation
 
-To test the more challenging scenario where one datacenter is still up but isolated from the other datacenter we'll be quickly erecting firewall rules to block a1 off from the rest of the cluster. We'll then restart all the Docker containers to break any existing connections.
+To test the more challenging scenario where one datacenter is still up but isolated from the other datacenter we'll be quickly erecting firewall rules to block site a1 off from b1 but not hte tiebreaker node. We'll then restart all the Docker containers to break any existing connections between the 2 sites.
 
+Before running this command, also run an ioping test to examine the drop in latency.
+```
+pcadmin@workstation:~$ ioping -W -D /mnt/cephfs/
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=1 time=11.7 ms (warmup)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=2 time=17.8 ms
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=3 time=11.9 ms
+...
+```
+
+While this test continues, we'll simulate the isolation:
 ```
 $ ssh ceph01.snowsupport.top "ufw deny from 10.1.45.204 to any port 22; \
 ufw deny from 10.1.45.205 to any port 22; \
 ufw deny from 10.1.45.206 to any port 22; \
-ufw deny from 10.1.45.207 to any port 22; \
 ufw allow from any to any port 22; \
 ufw deny from 10.1.45.204; \
 ufw deny from 10.1.45.205; \
 ufw deny from 10.1.45.206; \
-ufw deny from 10.1.45.207; \
 ufw deny out from any to 10.1.45.204; \
 ufw deny out from any to 10.1.45.205; \
 ufw deny out from any to 10.1.45.206; \
-ufw deny out from any to 10.1.45.207; \
 ufw --force enable; \
 docker restart \$(docker ps -q)";
 ssh ceph02.snowsupport.top "ufw deny from 10.1.45.204 to any port 22; \
 ufw deny from 10.1.45.205 to any port 22; \
 ufw deny from 10.1.45.206 to any port 22; \
-ufw deny from 10.1.45.207 to any port 22; \
 ufw allow from any to any port 22; \
 ufw deny from 10.1.45.204; \
 ufw deny from 10.1.45.205; \
 ufw deny from 10.1.45.206; \
-ufw deny from 10.1.45.207; \
 ufw deny out from any to 10.1.45.204; \
 ufw deny out from any to 10.1.45.205; \
 ufw deny out from any to 10.1.45.206; \
-ufw deny out from any to 10.1.45.207; \
 ufw --force enable; \
 docker restart \$(docker ps -q)";
 ssh ceph03.snowsupport.top "ufw deny from 10.1.45.204 to any port 22; \
 ufw deny from 10.1.45.205 to any port 22; \
 ufw deny from 10.1.45.206 to any port 22; \
-ufw deny from 10.1.45.207 to any port 22; \
 ufw allow from any to any port 22; \
 ufw deny from 10.1.45.204; \
 ufw deny from 10.1.45.205; \
 ufw deny from 10.1.45.206; \
-ufw deny from 10.1.45.207; \
 ufw deny out from any to 10.1.45.204; \
 ufw deny out from any to 10.1.45.205; \
 ufw deny out from any to 10.1.45.206; \
-ufw deny out from any to 10.1.45.207; \
 ufw --force enable; \
 docker restart \$(docker ps -q)";
 ```
@@ -257,37 +268,66 @@ root@ceph04:~# ceph -s
             1 datacenter (3 osds) down
             3 osds down
             3 hosts (3 osds) down
-            Reduced data availability: 10 pgs inactive, 39 pgs peering
+            Degraded data redundancy: 4634/9268 objects degraded (50.000%), 48 pgs degraded
+            21 slow ops, oldest one blocked for 45 sec, mon.ceph01 has slow ops
  
   services:
-    mon: 5 daemons, quorum ceph04,ceph05,ceph07 (age 1.58429s), out of quorum: ceph01, ceph02
-    mgr: ceph07.npfojd(active, since 81m), standbys: ceph04.ncskvs, ceph05.ehhdix, ceph02.hzxnsv, ceph01.qjcoxf
+    mon: 5 daemons, quorum ceph04,ceph05,ceph07 (age 6s), out of quorum: ceph01, ceph02
+    mgr: ceph07.npfojd(active, since 6h), standbys: ceph04.ncskvs, ceph05.ehhdix, ceph02.hzxnsv, ceph01.qjcoxf
     mds: 1/1 daemons up, 1 standby
-    osd: 6 osds: 3 up (since 6s), 6 in (since 17h)
+    osd: 6 osds: 3 up (since 11s), 6 in (since 22h)
  
   data:
     volumes: 1/1 healthy
     pools:   3 pools, 65 pgs
     objects: 2.32k objects, 6.9 GiB
     usage:   30 GiB used, 162 GiB / 192 GiB avail
-    pgs:     100.000% pgs not active
-             65 peering
- 
-  io:
-    client:   329 MiB/s rd, 898 op/s rd, 0 op/s wr
-    recovery: 0 B/s, 0 objects/s
+    pgs:     4634/9268 objects degraded (50.000%)
+             30 active+undersized+degraded
+             18 active+undersized+degraded+wait
+             10 active+undersized
+             7  active+undersized+wait
  
 root@ceph04:~# ceph health
-HEALTH_WARN We are missing stretch mode buckets, only requiring 1 of 2 buckets to peer; 2/5 mons down, quorum ceph04,ceph05,ceph07; 1 datacenter (3 osds) down; 3 osds down; 3 hosts (3 osds) down; Reduced data availability: 10 pgs inactive, 39 pgs peering
+HEALTH_WARN We are missing stretch mode buckets, only requiring 1 of 2 buckets to peer; 2/5 mons down, quorum ceph04,ceph05,ceph07; 1 datacenter (3 osds) down; 3 osds down; 3 hosts (3 osds) down; Degraded data redundancy: 4634/9268 objects degraded (50.000%), 48 pgs degraded; 26 slow ops, oldest one blocked for 50 sec, mon.ceph01 has slow ops
+
 ```
 
 Checking cluster status from the cut-off datacentre (ceph01):
 ```
 root@ceph01:~# ceph -s
-(just hangs)
-
+  cluster:
+    id:     9e9df6b0-8d26-11ee-a935-1b3a85021dcf
+    health: HEALTH_WARN
+            We are missing stretch mode buckets, only requiring 1 of 2 buckets to peer
+            2/5 mons down, quorum ceph04,ceph05,ceph07
+            1 datacenter (3 osds) down
+            3 osds down
+            3 hosts (3 osds) down
+            Degraded data redundancy: 4634/9268 objects degraded (50.000%), 48 pgs degraded
+            60 slow ops, oldest one blocked for 80 sec, daemons [mon.ceph01,mon.ceph02] have slow ops.
+ 
+  services:
+    mon: 5 daemons, quorum ceph04,ceph05,ceph07 (age 40s), out of quorum: ceph01, ceph02
+    mgr: ceph07.npfojd(active, since 6h), standbys: ceph04.ncskvs, ceph05.ehhdix, ceph02.hzxnsv, ceph01.qjcoxf
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 3 up (since 45s), 6 in (since 22h)
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 65 pgs
+    objects: 2.32k objects, 6.9 GiB
+    usage:   30 GiB used, 162 GiB / 192 GiB avail
+    pgs:     4634/9268 objects degraded (50.000%)
+             48 active+undersized+degraded
+             17 active+undersized
+ 
+  io:
+    client:   3.3 KiB/s wr, 0 op/s rd, 0 op/s wr
+ 
 root@ceph01:~# ceph health
-(just hangs)
+HEALTH_WARN We are missing stretch mode buckets, only requiring 1 of 2 buckets to peer; 2/5 mons down, quorum ceph04,ceph05,ceph07; 1 datacenter (3 osds) down; 3 osds down; 3 hosts (3 osds) down; Degraded data redundancy: 4634/9268 objects degraded (50.000%), 48 pgs degraded, 65 pgs undersized; 85 slow ops, oldest one blocked for 100 sec, daemons [mon.ceph01,mon.ceph02] have slow ops.
+
 ```
 
 
@@ -314,19 +354,19 @@ pcadmin@workstation:~$ mkdir /mnt/cephfs/newfolder2
 pcadmin@workstation:~$ touch /mnt/cephfs/newfolder2/newfile
 ```
 
-What are the ioping results?
+What are the ioping results? (Did you see a drop in file creation/write speed?) **Yes, it lagged for 47 seconds.**
 ```
-pcadmin@workstation:~$ ioping -c 5 -W -D /mnt/cephfs/
-4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=1 time=13.7 ms (warmup)
-4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=2 time=15.1 ms
-4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=3 time=16.4 ms
-4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=4 time=16.1 ms
-4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=5 time=16.2 ms
-
---- /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB) ioping statistics ---
-4 requests completed in 63.8 ms, 16 KiB written, 62 iops, 251.0 KiB/s
-generated 5 requests in 4.02 s, 20 KiB, 1 iops, 4.98 KiB/s
-min/avg/max/mdev = 15.1 ms / 15.9 ms / 16.4 ms / 476.1 us
+pcadmin@workstation:~$ ioping -W -D /mnt/cephfs/
+...
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=25 time=11.5 ms (fast)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=26 time=11.8 ms (fast)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=27 time=17.4 ms (fast)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=28 time=11.4 ms (fast)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=29 time=11.7 ms (fast)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=30 time=47.1 s (slow)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=31 time=7.05 ms (fast)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=32 time=6.33 ms (fast)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=33 time=6.80 ms (fast)
 ```
 
 Reset the firewall to stop the isolation:
@@ -338,30 +378,6 @@ ssh ceph03.snowsupport.top ufw --force reset
 
 Seems to have recovered:
 ```
-root@ceph04:~# ceph health
-HEALTH_WARN We are recovering stretch mode buckets, only requiring 1 of 2 buckets to peer
-root@ceph04:~# ceph -s
-  cluster:
-    id:     9e9df6b0-8d26-11ee-a935-1b3a85021dcf
-    health: HEALTH_WARN
-            We are recovering stretch mode buckets, only requiring 1 of 2 buckets to peer
- 
-  services:
-    mon: 5 daemons, quorum ceph01,ceph02,ceph04,ceph05,ceph07 (age 13s)
-    mgr: ceph07.npfojd(active, since 85m), standbys: ceph04.ncskvs, ceph05.ehhdix, ceph02.hzxnsv, ceph01.qjcoxf
-    mds: 1/1 daemons up, 1 standby
-    osd: 6 osds: 6 up (since 10s), 6 in (since 17h)
- 
-  data:
-    volumes: 1/1 healthy
-    pools:   3 pools, 65 pgs
-    objects: 2.32k objects, 6.9 GiB
-    usage:   30 GiB used, 162 GiB / 192 GiB avail
-    pgs:     65 active+clean
- 
-  io:
-    recovery: 30 B/s, 0 keys/s, 0 objects/s
- 
 root@ceph04:~# ceph health
 HEALTH_OK
 root@ceph04:~# ceph -s
