@@ -426,7 +426,11 @@ root@ceph01:~# ceph mon set_location ceph05 datacentre=b1
 
 ## Now add a stretch_rule to the end of the CRUSH map by again editing it
 
-Note that the 'id' needs to be set to a positive integer that isn't used by other rules. Note that your datacentre names need to be entered here on the 'take' lines:
+Note that:
+
+1) The examples provided in the Ceph docs are incorrect and will not work. The valies for min_size and max_size are no longer defined in the CRUSH map, but instead are defined at the pool level. See: https://docs.ceph.com/en/latest/rados/operations/stretch-mode/#entering-stretch-mode
+1) The 'id' here needs to be set to a positive integer that isn't used by other rules.
+2) That your datacentre names need to be entered here on the 'take' lines:
 ```
 root@ceph01:~# nano ./editable.map
 
