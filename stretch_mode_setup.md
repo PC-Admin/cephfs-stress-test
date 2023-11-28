@@ -463,7 +463,7 @@ root@ceph01:~# ceph osd setcrushmap -i crushmap.compiled
 
 ## Command the cluster to enter stretch mode.
 
-In this example, ceph03 is the tiebreaker monitor and we are splitting across data centers. The tiebreaker monitor must be assigned a data center that is neither a1 nor b1.
+In this example, ceph07 is the tiebreaker monitor and we are splitting across data centers. The tiebreaker monitor must be assigned a data center that is neither a1 nor b1.
 
 First we need to add the 'tiebreaker' node to a 3rd virtual datacentre c1 **that isn't defined** in the CRUSH map.
 
