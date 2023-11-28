@@ -129,7 +129,7 @@ root@ceph04:~# ceph health
 HEALTH_WARN 3 hosts fail cephadm check; We are missing stretch mode buckets, only requiring 1 of 2 buckets to peer; insufficient standby MDS daemons available; 2/5 mons down, quorum ceph04,ceph05,ceph07; 1 datacenter (3 osds) down; 3 osds down; 3 hosts (3 osds) down; Degraded data redundancy: 4630/9260 objects degraded (50.000%), 48 pgs degraded, 65 pgs undersized
 ```
 
-Can the filesystem still be read? **Yes, but it's quite slow to return results. (~1min)**
+Can the filesystem still be read? **Yes, but it's quite slow to return results. (~30sec)**
 ```
 pcadmin@workstation:~$ ls -la /mnt/cephfs/
 total 6376652
@@ -144,9 +144,13 @@ drwxr-xr-x 9 root    root        4096 Nov 21 15:49  ..
 -rw-r--r-- 1 pcadmin pcadmin  7229440 Nov 28 12:56  read-test.0.1002
 ```
 
-Can files be read? **Yes, but it is quite slow to start reading. (~1min)**
+Can files be read? **Yes, but it is quite slow to start reading. (~30sec)**
 
 Can files be written? **Yes, seems to be no lag now it's reading...**
+```
+pcadmin@workstation:~$ mkdir /mnt/cephfs/newfolder
+pcadmin@workstation:~$ touch /mnt/cephfs/newfolder/newfile
+```
 
 What are the ioping results?
 ```
@@ -191,26 +195,193 @@ HEALTH_WARN clock skew detected on mon.ceph02
 
 ## Testing Datacenter Isolation
 
-To test the more challenging scenario where one datacenter is still up but isolated from the other datacenter we'll be quickly erecting firewall rules to block a1 off from the rest of the cluster.
+To test the more challenging scenario where one datacenter is still up but isolated from the other datacenter we'll be quickly erecting firewall rules to block a1 off from the rest of the cluster. We'll then restart all the Docker containers to break any existing connections.
 
 ```
-
+$ ssh ceph01.snowsupport.top "ufw deny from 10.1.45.204 to any port 22; \
+ufw deny from 10.1.45.205 to any port 22; \
+ufw deny from 10.1.45.206 to any port 22; \
+ufw deny from 10.1.45.207 to any port 22; \
+ufw allow from any to any port 22; \
+ufw deny from 10.1.45.204; \
+ufw deny from 10.1.45.205; \
+ufw deny from 10.1.45.206; \
+ufw deny from 10.1.45.207; \
+ufw deny out from any to 10.1.45.204; \
+ufw deny out from any to 10.1.45.205; \
+ufw deny out from any to 10.1.45.206; \
+ufw deny out from any to 10.1.45.207; \
+ufw --force enable; \
+docker restart \$(docker ps -q)";
+ssh ceph02.snowsupport.top "ufw deny from 10.1.45.204 to any port 22; \
+ufw deny from 10.1.45.205 to any port 22; \
+ufw deny from 10.1.45.206 to any port 22; \
+ufw deny from 10.1.45.207 to any port 22; \
+ufw allow from any to any port 22; \
+ufw deny from 10.1.45.204; \
+ufw deny from 10.1.45.205; \
+ufw deny from 10.1.45.206; \
+ufw deny from 10.1.45.207; \
+ufw deny out from any to 10.1.45.204; \
+ufw deny out from any to 10.1.45.205; \
+ufw deny out from any to 10.1.45.206; \
+ufw deny out from any to 10.1.45.207; \
+ufw --force enable; \
+docker restart \$(docker ps -q)";
+ssh ceph03.snowsupport.top "ufw deny from 10.1.45.204 to any port 22; \
+ufw deny from 10.1.45.205 to any port 22; \
+ufw deny from 10.1.45.206 to any port 22; \
+ufw deny from 10.1.45.207 to any port 22; \
+ufw allow from any to any port 22; \
+ufw deny from 10.1.45.204; \
+ufw deny from 10.1.45.205; \
+ufw deny from 10.1.45.206; \
+ufw deny from 10.1.45.207; \
+ufw deny out from any to 10.1.45.204; \
+ufw deny out from any to 10.1.45.205; \
+ufw deny out from any to 10.1.45.206; \
+ufw deny out from any to 10.1.45.207; \
+ufw --force enable; \
+docker restart \$(docker ps -q)";
 ```
 
 Examine the state of the remaining cluster:
 
 ```
+root@ceph04:~# ceph -s
+  cluster:
+    id:     9e9df6b0-8d26-11ee-a935-1b3a85021dcf
+    health: HEALTH_WARN
+            We are missing stretch mode buckets, only requiring 1 of 2 buckets to peer
+            2/5 mons down, quorum ceph04,ceph05,ceph07
+            1 datacenter (3 osds) down
+            3 osds down
+            3 hosts (3 osds) down
+            Reduced data availability: 10 pgs inactive, 39 pgs peering
+ 
+  services:
+    mon: 5 daemons, quorum ceph04,ceph05,ceph07 (age 1.58429s), out of quorum: ceph01, ceph02
+    mgr: ceph07.npfojd(active, since 81m), standbys: ceph04.ncskvs, ceph05.ehhdix, ceph02.hzxnsv, ceph01.qjcoxf
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 3 up (since 6s), 6 in (since 17h)
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 65 pgs
+    objects: 2.32k objects, 6.9 GiB
+    usage:   30 GiB used, 162 GiB / 192 GiB avail
+    pgs:     100.000% pgs not active
+             65 peering
+ 
+  io:
+    client:   329 MiB/s rd, 898 op/s rd, 0 op/s wr
+    recovery: 0 B/s, 0 objects/s
+ 
+root@ceph04:~# ceph health
+HEALTH_WARN We are missing stretch mode buckets, only requiring 1 of 2 buckets to peer; 2/5 mons down, quorum ceph04,ceph05,ceph07; 1 datacenter (3 osds) down; 3 osds down; 3 hosts (3 osds) down; Reduced data availability: 10 pgs inactive, 39 pgs peering
+```
+
+Checking cluster status from the cut-off datacentre (ceph01):
+```
+root@ceph01:~# ceph -s
+(just hangs)
+
+root@ceph01:~# ceph health
+(just hangs)
+```
+
+
+Can the filesystem still be read? **Yes, but it is quite slow to start reading. (~30sec)**
+```
+pcadmin@workstation:~$ ls -la /mnt/cephfs/
+total 6376652
+drwxr-xr-x 3 pcadmin pcadmin     1025 Nov 28 14:13  .
+drwxr-xr-x 9 root    root        4096 Nov 21 15:49  ..
+-rw-r--r-- 1 pcadmin pcadmin  3305472 Nov 28 12:53  read-test.0.0
+-rw-r--r-- 1 pcadmin pcadmin  4702208 Nov 28 12:53  read-test.0.1
+-rw-r--r-- 1 pcadmin pcadmin  3088384 Nov 28 12:53  read-test.0.10
+-rw-r--r-- 1 pcadmin pcadmin 10326016 Nov 28 12:53  read-test.0.100
+-rw-r--r-- 1 pcadmin pcadmin  6270976 Nov 28 12:56  read-test.0.1000
+-rw-r--r-- 1 pcadmin pcadmin  9347072 Nov 28 12:56  read-test.0.1001
+-rw-r--r-- 1 pcadmin pcadmin  7229440 Nov 28 12:56  read-test.0.1002
+```
+
+Can files be read? **Yes, seems to be no lag now it's reading...**
+
+Can files be written? **Yes, seems to be no lag now it's reading...**
+```
+pcadmin@workstation:~$ mkdir /mnt/cephfs/newfolder2
+pcadmin@workstation:~$ touch /mnt/cephfs/newfolder2/newfile
+```
+
+What are the ioping results?
+```
+pcadmin@workstation:~$ ioping -c 5 -W -D /mnt/cephfs/
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=1 time=13.7 ms (warmup)
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=2 time=15.1 ms
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=3 time=16.4 ms
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=4 time=16.1 ms
+4 KiB >>> /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB): request=5 time=16.2 ms
+
+--- /mnt/cephfs/ (ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.203:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.206:6789,10.1.45.207:6789:/ 25.8 GiB) ioping statistics ---
+4 requests completed in 63.8 ms, 16 KiB written, 62 iops, 251.0 KiB/s
+generated 5 requests in 4.02 s, 20 KiB, 1 iops, 4.98 KiB/s
+min/avg/max/mdev = 15.1 ms / 15.9 ms / 16.4 ms / 476.1 us
+```
+
+Reset the firewall to stop the isolation:
+```
+root@ceph03:~# ssh ceph01.snowsupport.top ufw --force reset;
+ssh ceph02.snowsupport.top ufw --force reset;
+ssh ceph03.snowsupport.top ufw --force reset
+```
+
+Seems to have recovered:
+```
+root@ceph04:~# ceph health
+HEALTH_WARN We are recovering stretch mode buckets, only requiring 1 of 2 buckets to peer
+root@ceph04:~# ceph -s
+  cluster:
+    id:     9e9df6b0-8d26-11ee-a935-1b3a85021dcf
+    health: HEALTH_WARN
+            We are recovering stretch mode buckets, only requiring 1 of 2 buckets to peer
+ 
+  services:
+    mon: 5 daemons, quorum ceph01,ceph02,ceph04,ceph05,ceph07 (age 13s)
+    mgr: ceph07.npfojd(active, since 85m), standbys: ceph04.ncskvs, ceph05.ehhdix, ceph02.hzxnsv, ceph01.qjcoxf
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 10s), 6 in (since 17h)
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 65 pgs
+    objects: 2.32k objects, 6.9 GiB
+    usage:   30 GiB used, 162 GiB / 192 GiB avail
+    pgs:     65 active+clean
+ 
+  io:
+    recovery: 30 B/s, 0 keys/s, 0 objects/s
+ 
+root@ceph04:~# ceph health
+HEALTH_OK
+root@ceph04:~# ceph -s
+  cluster:
+    id:     9e9df6b0-8d26-11ee-a935-1b3a85021dcf
+    health: HEALTH_OK
+ 
+  services:
+    mon: 5 daemons, quorum ceph01,ceph02,ceph04,ceph05,ceph07 (age 6s)
+    mgr: ceph07.npfojd(active, since 85m), standbys: ceph04.ncskvs, ceph05.ehhdix, ceph02.hzxnsv, ceph01.qjcoxf
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 19s), 6 in (since 17h)
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 65 pgs
+    objects: 2.32k objects, 6.9 GiB
+    usage:   30 GiB used, 162 GiB / 192 GiB avail
+    pgs:     65 active+clean
 
 ```
 
-Can the filesystem still be read?
-
-Can files be read?
-
-Can files be written?
-
-What are the ioping and fio results?
-
-```
-
-```
+Nice! :)
