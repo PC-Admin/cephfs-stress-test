@@ -400,4 +400,4 @@ root@ceph04:~# ceph -s
 
 ```
 
-Nice! :)
+Nice! 33 and 47 seconds of downtime isn't bad at all! :)
