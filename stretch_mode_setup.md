@@ -458,7 +458,7 @@ root@ceph01:~# ceph osd setcrushmap -i crushmap.compiled
 
 ## Change Existing Monitors to 'Connectivity Mode'
 
-root@ceph01:~# ceph mon set election_strategy connectivity
+`root@ceph01:~# ceph mon set election_strategy connectivity`
 
 
 ## Command the cluster to enter stretch mode.
