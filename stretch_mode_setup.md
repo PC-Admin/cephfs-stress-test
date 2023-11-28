@@ -416,11 +416,12 @@ So now we want to transform this cluster into a 'stretched mode' cluster, which 
 
 
 ## First we define the location of our monitors:
-
+```
 root@ceph01:~# ceph mon set_location ceph01 datacentre=a1
 root@ceph01:~# ceph mon set_location ceph02 datacentre=a1
 root@ceph01:~# ceph mon set_location ceph04 datacentre=b1
 root@ceph01:~# ceph mon set_location ceph05 datacentre=b1
+```
 
 
 ## Now add a stretch_rule to the end of the CRUSH map by again editing it
