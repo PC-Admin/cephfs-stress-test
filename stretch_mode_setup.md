@@ -477,6 +477,8 @@ Then finally we enable stretch mdoe and declate ceph07 to be the tiebreaker node
 
 `root@ceph01:~# ceph mon enable_stretch_mode ceph07 stretch_rule datacenter`
 
+You did it! Congradulations! You now have a stretch mode cluster!
+
 
 ## Weird Monitor Location Bug!!!
 
@@ -497,24 +499,6 @@ Error EINVAL: Could not find location entry for datacenter on monitor ceph05
 root@ceph01:~# ceph mon set_location ceph05 datacenter=b1
 root@ceph01:~# ceph mon enable_stretch_mode ceph07 stretch_rule datacenter
 ```
-
-
-## Set Replication Levels per Pool
-
-Replication levels are applied at the pool level these days, not in the CRUSH map. Adjust your pool replication levels like so:
-
-```
-root@ceph01:~# ceph osd pool set cephfs_data min_size 2
-set pool 2 min_size to 2
-root@ceph01:~# ceph osd pool set cephfs_data size 4
-set pool 2 size to 4
-root@ceph01:~# ceph osd pool set cephfs_metadata min_size 2
-set pool 3 min_size to 2
-root@ceph01:~# ceph osd pool set cephfs_metadata size 4
-set pool 3 size to 4
-```
-
-You did it! Congradulations! You now have a stretch mode cluster!
 
 
 ## Examine Stretch Mode Settings
