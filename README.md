@@ -27,8 +27,16 @@ pcadmin@workstation:~/cephfs-stress-test$ sudo chown pcadmin:pcadmin /mnt/cephfs
 2) Check that the directory in fiotest.fio is actually the mount location of your CephFS.
 
 
-3) Run the test:
+3) Run the fio test:
 `pcadmin@workstation:~/cephfs-stress-test$ fio ./fiotest.fio`
+
+
+4) Run an ioping test:
+`pcadmin@workstation:~/cephfs-stress-test$ ioping -W -D /mnt/cephfs/`
+
+Run it while testing failover to examine the latency. You can also run it a set amount of times with -c:
+
+`pcadmin@workstation:~/cephfs-stress-test$ ioping -W -D -c 10 /mnt/cephfs/`
 
 
 ## Extract Bulk Logs from Ceph
