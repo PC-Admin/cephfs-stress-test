@@ -331,7 +331,7 @@ pool 4 '.rgw.root' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkin
 
 hmmm... seems the pool groups are undersized because there are only 2 and 3 OSDs in each class.
 
-It must be trying to put 8 copies in both classes? (totaling 8?) Yep! :) Set max and min size to 2 since I have limited OSDs here to test with.
+It must be trying to put 4x copies in both classes? (totaling 8?) Yep! :) Set max and min size to 2 since I have limited OSDs here to test with.
 
 
 ### Remove osd.2 to mimic rs2 site
