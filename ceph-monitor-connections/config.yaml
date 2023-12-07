@@ -1,0 +1,9 @@
+ceph_monitors:
+  - ceph01.snowsupport.top
+  - ceph02.snowsupport.top
+  - ceph04.snowsupport.top
+  - ceph05.snowsupport.top
+  - ceph07.snowsupport.top
+port: 6789
+cephfs_mount_path: "/mnt/cephfs"
+log_file_location: "./ceph-monitor-connections.log"

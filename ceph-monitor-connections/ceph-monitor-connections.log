@@ -1,0 +1,8 @@
+2023-12-07 14:48:40 INFO: The majority of Ceph monitors could not be reached. Stopping Tomcat and unmounting Ceph...
+2023-12-07 14:48:40 INFO: Tomcat has been stopped successfully.
+2023-12-07 14:48:40 INFO: CephFS at /mnt/cephfs is not mounted. No action needed.
+2023-12-07 14:48:40 ERROR: Majority of Ceph monitors are NOT reachable. This script needs to be manually run with the 'reset' argument to proceed.
+2023-12-07 14:49:08 INFO: The majority of Ceph monitors are reachable.
+2023-12-07 14:49:10 INFO: The majority of Ceph monitors are reachable.
+2023-12-07 14:49:11 INFO: The majority of Ceph monitors are reachable.
+2023-12-07 14:49:12 INFO: The majority of Ceph monitors are reachable.
