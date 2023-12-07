@@ -19,7 +19,7 @@ pcadmin ALL=(ALL) NOPASSWD: /usr/bin/umount --lazy /mnt/cephfs
 -----------------------------------------------------------------
 ```
 
-Make sure the username and mount point in visudo match your environment.
+Make sure the username and mount point in the visudo additions above match your environment.
 
 
 2) Then edit the variables found in config.yaml to match your environment.
