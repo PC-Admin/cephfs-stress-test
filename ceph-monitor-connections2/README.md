@@ -28,3 +28,12 @@ Note that we're writing stdout to a log file here, this isn't required but I wou
 pcadmin@workstation:~/ceph-monitor-connections$ python3 ./ceph-monitor-connections.py
 root@workstation:/home/pcadmin/ceph-monitor-connections# python3 ./ceph-check-mounts.py
 ```
+
+## Checking for unmounted CephFS
+
+The ceph-check-mounts.py script will print which mount points are currently unmounted:
+```
+# python3 ceph-list-unmounted.py 
+Unmounted Ceph mount points:
+/mnt/cephfs2
+```
