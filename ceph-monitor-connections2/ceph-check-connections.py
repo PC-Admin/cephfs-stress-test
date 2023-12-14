@@ -19,7 +19,13 @@ def check_connection(host):
 
 # Determines if a majority of the provided hosts can be connected to on a port 6789.
 def majority_connected(hosts):
-    successful_connections = sum(check_connection(host) for host in hosts)
+    successful_connections = 0
+    for host in hosts:
+        if check_connection(host):
+            print(f"Successfully connected to {host}")
+            successful_connections += 1
+        else:
+            print(f"Failed to connect to {host}")
     print(f"Successful connections: {successful_connections} out of {len(hosts)}")
     return successful_connections >= len(hosts) // 2 + 1
 

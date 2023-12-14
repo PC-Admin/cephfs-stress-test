@@ -6,6 +6,7 @@ ceph_monitors:
   - ceph07.snowsupport.top
 ceph_mount_points: 
   - "/mnt/cephfs"
+  - "/mnt/cephfs2"
 ceph_startup_commands: 
   - "/usr/bin/mount -t ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.207:6789:/ /mnt/cephfs -o name=admin,secret=REDACTED"
   - "/usr/bin/systemctl start tomcat9"

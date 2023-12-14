@@ -29,3 +29,7 @@ Checking and writing to mount point: /mnt/cephfs
 Successfully wrote to mount point: /mnt/cephfs
 All mount points checked successfully.
 Mount point check succeeded.
+
+# python3 ceph-list-unmounted.py 
+Unmounted Ceph mount points:
+/mnt/cephfs2
