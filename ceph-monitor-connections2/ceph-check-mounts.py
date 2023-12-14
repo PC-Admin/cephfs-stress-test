@@ -93,8 +93,10 @@ if check_last_n_lines(ceph_connections_status_file, 'FAIL', 1) and not os.path.e
     if run_commands(ceph_shutdown_commands) == 0:
         open(lockdown_file, 'a').close()
         print("Lockdown file created.")
+        sys.exit(0)
     else:
         print("Failed to run shutdown commands.")
+        sys.exit(1)
 
 # If the last 3 lines of the log file contains 'SUCCESS' and ./lockdown.file exists
 elif check_last_n_lines(ceph_connections_status_file, 'SUCCESS', 3) and os.path.exists(lockdown_file):
@@ -102,6 +104,7 @@ elif check_last_n_lines(ceph_connections_status_file, 'SUCCESS', 3) and os.path.
     if run_commands(ceph_startup_commands) == 0:
         os.remove(lockdown_file)
         print("Lockdown file removed.")
+        sys.exit(0)
     else:
         print("Failed to run startup commands.")
         sys.exit(1)
