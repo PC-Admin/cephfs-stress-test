@@ -1,0 +1,15 @@
+ceph_monitors:
+  - ceph01.snowsupport.top
+  - ceph02.snowsupport.top
+  - ceph04.snowsupport.top
+  - ceph05.snowsupport.top
+  - ceph07.snowsupport.top
+ceph_mount_points: 
+  - "/mnt/cephfs"
+ceph_startup_commands: 
+  - "/usr/bin/mount -t ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.207:6789:/ /mnt/cephfs -o name=admin,secret=REDACTED"
+  - "/usr/bin/systemctl start tomcat9"
+ceph_shutdown_commands: 
+  - "/usr/bin/systemctl stop tomcat9"
+  - "umount -l /mnt/cephfs"
+ceph_connections_status_file: "./ceph-connections.status"

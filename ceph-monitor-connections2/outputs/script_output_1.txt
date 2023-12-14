@@ -1,0 +1,31 @@
+# python3 ceph-check-mounts.py
+Loading configuration from config.yaml
+Checking the last 1 lines of ./ceph-connections.status for 'FAIL'
+Last line contains 'FAIL' and lockdown file does not exist. Initiating shutdown sequence.
+Running command: "/usr/bin/systemctl stop tomcat9"
+Running command: "umount -l /mnt/cephfs"
+All commands executed successfully.
+Lockdown file created.
+
+# python3 ceph-check-mounts.py
+Loading configuration from config.yaml
+Checking the last 1 lines of ./ceph-connections.status for 'FAIL'
+Checking the last 3 lines of ./ceph-connections.status for 'SUCCESS'
+Last 3 lines contain 'SUCCESS' and lockdown file exists. Initiating startup sequence.
+Running command: "/usr/bin/mount -t ceph 10.1.45.201:6789,10.1.45.202:6789,10.1.45.204:6789,10.1.45.205:6789,10.1.45.207:6789:/ /mnt/cephfs -o name=admin,secret=AQDalWRlNyrTMxAAOUmr7wQoRiDPK6xoSW6PvQ=="
+unable to get monitor info from DNS SRV with service name: ceph-mon
+2023-12-14T14:27:54.323+0800 7f750a4b4f40 -1 failed for service _ceph-mon._tcp
+Running command: "/usr/bin/systemctl start tomcat9"
+All commands executed successfully.
+Lockdown file removed.
+
+# python3 ceph-check-mounts.py
+Loading configuration from config.yaml
+Checking the last 1 lines of ./ceph-connections.status for 'FAIL'
+Checking the last 3 lines of ./ceph-connections.status for 'SUCCESS'
+Checking the last 1 lines of ./ceph-connections.status for 'SUCCESS'
+Last line contains 'SUCCESS' and lockdown file does not exist. Checking mount points.
+Checking and writing to mount point: /mnt/cephfs
+Successfully wrote to mount point: /mnt/cephfs
+All mount points checked successfully.
+Mount point check succeeded.
