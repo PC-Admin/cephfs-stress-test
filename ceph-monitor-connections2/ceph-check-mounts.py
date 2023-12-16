@@ -113,6 +113,7 @@ ceph_shutdown_commands = config["ceph_shutdown_commands"]
 ceph_startup_commands = config["ceph_startup_commands"]
 ceph_mount_points = config["ceph_mount_points"]
 
+# Load the lockdown file state.
 lockdown_file = './lockdown.file'
 lockdown_state = load_lockdown_state(lockdown_file)
 
@@ -121,11 +122,13 @@ fail_once = check_last_n_lines(ceph_connections_status_file, 'FAIL', 1)
 success_once = check_last_n_lines(ceph_connections_status_file, 'SUCCESS', 1)
 success_thrice = check_last_n_lines(ceph_connections_status_file, 'SUCCESS', 3)
 
+# Check if the lockdown file exists.
 lockdown_mode = os.path.exists(lockdown_file)
 
 # If the last line of the log file contains 'FAIL' and ./lockdown.file does not exist, attempt to run the shutdown commands
 if fail_once and not lockdown_mode:
     print("Last line contains 'FAIL' and lockdown file does not exist. Initiating shutdown sequence.")
+    # If the shutdown commands succeed, create the lockdown file
     if run_commands(ceph_shutdown_commands) == 0:
         open(lockdown_file, 'a').close()
         print("Lockdown file created.")
@@ -143,6 +146,7 @@ elif success_thrice and lockdown_mode:
     # If the next attempt time is in the past, run the startup commands
     if datetime.now() >= next_attempt:
         print("Attempting to run startup commands.")
+        # Update the lockdown file
         lockdown_state["attempts"] += 1
         lockdown_state["last_attempt"] = datetime.now()
         save_lockdown_state(lockdown_file, lockdown_state)
@@ -160,8 +164,10 @@ elif success_thrice and lockdown_mode:
 # If the last line of the log file contains 'SUCCESS' and ./lockdown.file does not exist, check the mount points
 elif success_once and not lockdown_mode:
     print("Last line contains 'SUCCESS' and lockdown file does not exist. Checking mount points.")
+    # If the mount point check fails, attempt to run the shutdown commands
     if not check_mounts(ceph_mount_points):
         print("Mount point check failed. Initiating shutdown sequence.")
+        # If the shutdown commands succeed, create the lockdown file
         if run_commands(ceph_shutdown_commands) == 0:
             open(lockdown_file, 'a').close()
             print("Lockdown file created.")
