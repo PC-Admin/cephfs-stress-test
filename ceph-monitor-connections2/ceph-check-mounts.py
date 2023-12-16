@@ -26,12 +26,6 @@ from datetime import datetime, timedelta
 #     - If writing succeeds on all mount points, we:
 #       - return 0
 
-# Checking Mount Points:
-# Add the list of unmounted drives to a list ??
-
-# Restart:
-# Ideally we should have some sort of state record so we don't keep restarting if the connectivity works but mounting doesn't. ??
-
 # Load the configuration from a YAML file.
 def load_config(file_path):
     print(f"Loading configuration from {file_path}")
