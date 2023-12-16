@@ -11,7 +11,7 @@
 
 3) Create a Crontab entry for that non-root user to run the ceph-check-connections.py script every minute:
 ```
-* * * * * /usr/bin/python3 /home/pcadmin/ceph-monitor-connections.py >> /var/log/ceph-monitor-connections.log
+* * * * * /home/pcadmin/ceph-monitor-connections.py >> /var/log/ceph-monitor-connections.log
 ```
 
 Note that we're writing stdout to a log file here, this isn't required but I would recommend it.
@@ -19,21 +19,21 @@ Note that we're writing stdout to a log file here, this isn't required but I wou
 
 4) Create a Crontab entry for root user to run the ceph-check-mounts.py script every 2 minutes:
 ```
-*/2 * * * * /usr/bin/python3 /home/pcadmin/ceph-check-mounts.py >> /var/log/ceph-check-mounts.log
+*/2 * * * * /home/pcadmin/ceph-check-mounts.py >> /var/log/ceph-check-mounts.log
 ```
 
 
 5) Do a manual test run of the scripts:
 ```
-pcadmin@workstation:~/ceph-monitor-connections$ python3 ./ceph-monitor-connections.py
-root@workstation:/home/pcadmin/ceph-monitor-connections# python3 ./ceph-check-mounts.py
+pcadmin@workstation:~/ceph-monitor-connections2$ ./ceph-monitor-connections.py
+root@workstation:/home/pcadmin/ceph-monitor-connections2# ./ceph-check-mounts.py
 ```
 
 ## Checking for unmounted CephFS
 
 The ceph-check-mounts.py script will print which mount points are currently unmounted:
 ```
-# python3 ceph-list-unmounted.py 
+root@workstation:/home/pcadmin/ceph-monitor-connections2# ./ceph-list-unmounted.py 
 Unmounted Ceph mount points:
 /mnt/cephfs2
 ```

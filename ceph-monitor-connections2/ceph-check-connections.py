@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import socket
 import yaml
 import sys
@@ -22,7 +24,6 @@ def majority_connected(hosts):
     successful_connections = 0
     for host in hosts:
         if check_connection(host):
-            print(f"Successfully connected to {host}")
             successful_connections += 1
         else:
             print(f"Failed to connect to {host}")
