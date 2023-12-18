@@ -3,7 +3,7 @@
 import yaml
 import os
 
-#This script checks and prints which Ceph mount points are unmounted
+# This script checks and prints which Ceph mount points are unmounted
 
 # Load the configuration from a YAML file.
 def load_config(file_path):
