@@ -142,7 +142,7 @@ elif success_thrice and lockdown_mode:
     print("Last line contains 'SUCCESS' and lockdown file exists.")
     # Calculate the next attempt time based on Fibonacci with a max of 13 minutes
     print(f'Backoff of {min(fibonacci(lockdown_state["attempts"]), 13)} minutes is required.')
-    next_attempt = lockdown_state["last_attempt"] + timedelta(minutes=min(fibonacci(lockdown_state["attempts"]), 13))
+    next_attempt = lockdown_state["last_attempt"] + timedelta(minutes=min(fibonacci(lockdown_state["attempts"] - 1), 13))
     # If the next attempt time is in the past, run the startup commands
     if datetime.now() >= next_attempt:
         print("Attempting to run startup commands.")

@@ -1,7 +1,9 @@
 
 # Ceph Monitor Connections 2
 
-These scripts run via cron and check if the majority of Ceph monitors can be reached, if not it will log the failure then turn off Tomcat and unmount CephFS.
+These scripts run via cron and check if the majority of Ceph monitors can be reached, if not it will log the failure, enter "lockdown mode" and run a custom shutdown sequence. They will also enter a lockdown mode if the Ceph mount points are unwritable or not mounted.
+
+Once in "lockdown mode", if the majority of Ceph servers can be reached, the script will run a custom startup sequence with a fibonacci backoff schedule maxing out at 13mins. (Eg. 1, 1, 2, 3, 5, 8, 13)
 
 [ceph-check-connections.py](./ceph-check-connections.py)
 
