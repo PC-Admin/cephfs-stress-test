@@ -10,7 +10,7 @@ Once in "lockdown mode", if the majority of Ceph servers can be reached, the scr
 This script checks if the majority of Ceph monitors can be reached and return a 0 for success or 1 for failure.
 
 [ceph-check-mounts.py](./ceph-check-mounts.py)
-``
+
 - Loads a config file
 - Loads the cephfs_connections_status_file log file
 - If the last line of the log file contains 'FAIL' and ./lockdown.file does not exist:
